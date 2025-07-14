@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&family=Sen:wght@400..800&display=swap');
+
+@import "tailwindcss";
+
+
+@theme {
+    --font-sans: "Sen", sans-serif;
+    --color-primary-black: #232323;
+    --color-primary-icon:#606060;
+    --color-gray: #606060;
+}
+
+body {
+    @apply font-sans text-primary-black bg-[#FCFCFC];
+}
+
+/* 🛠️ Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-gray-100 ;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-lg;
+}
+
+.btn{
+    @apply font-semibold px-4 py-[11px] rounded-lg border border-transparent cursor-pointer duration-300 min-w-[110px];
+}
+.btn-primary{
+    @apply bg-primary-black text-white hover:border-primary-black hover:bg-transparent hover:text-primary-black ;
+}
+.btn-secondary{
+    @apply border-primary-black hover:border-transparent hover:text-white hover:bg-primary-black;
+}
+
+button{
+    @apply cursor-pointer;
+}
+
+input{
+    @apply border-[#DDDDDD];
+}
+/* Checkbox Container */
+.custom-checkbox-container {
+    @apply flex items-center space-x-2;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+    @apply  h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-slate-800 checked:border-slate-800;
+}
+
+/* Checkbox Icon */
+.custom-checkbox-icon {
+    @apply absolute text-white opacity-0 peer-has-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none;
+}
+
