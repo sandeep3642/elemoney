@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 const api = axios.create({
-    baseURL: "https://elefinmoney.trendingobjects.com/api",
+    baseURL: "https://admindev.elefinmoney.com/api",
     headers: {
         "Content-Type": "application/json",
     },
