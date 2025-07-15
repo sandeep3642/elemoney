@@ -6,7 +6,6 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
-
   function ScrollToTop() {
     const { pathname } = useLocation();
     useEffect(() => {
@@ -16,12 +15,8 @@ function App() {
   }
 
   return (
-    <Suspense>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="colored"
-      />
+    <Suspense fallback={<div>Loading...</div>}>
+      <ToastContainer position="top-right" autoClose={3000} theme="colored" />
       <BrowserRouter basename="/">
         <ScrollToTop />
 
@@ -30,10 +25,13 @@ function App() {
             {routes.map((route, index) => (
               <Route
                 key={index}
-                exact={route.exact}
                 path={route.path}
-                element={route.component}
-              />
+                element={route.element} // ✅ FIX: Use 'element' not 'component'
+              >
+                {route.children?.map((child, idx) => (
+                  <Route key={idx} path={child.path} element={child.element} />
+                ))}
+              </Route>
             ))}
           </Routes>
         </AuthProvider>
