@@ -13,7 +13,7 @@ const Layout = () => {
     <div className="trigger">
       <div className="flex">
         <Sidebar />
-        <div className="flex flex-col flex-1 p-6 w-full max-w-[1500px]">
+        <div className="flex flex-col flex-1 p-6 w-full">
           <Header />
           <Outlet />
         </div>

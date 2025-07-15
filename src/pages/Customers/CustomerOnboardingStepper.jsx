@@ -7,10 +7,15 @@ import {
   MapPin,
   Users,
   Check,
+  Loader,
 } from "lucide-react";
+import { createCustomer, updateCustomer } from "./customer-service"; // Adjust path as needed
 
 const CustomerOnboardingStepper = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [customerId, setCustomerId] = useState(null);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     // Basic Details
     name: "",
@@ -133,19 +138,108 @@ const CustomerOnboardingStepper = () => {
   };
 
   const handleNext = async () => {
-    // Simulate API call
-    const currentStepData = {};
-    steps[currentStep].fields.forEach((field) => {
-      currentStepData[field] = formData[field];
-    });
+    setIsLoading(true);
+    setError(null);
 
-    console.log("Sending data for step:", currentStep + 1, currentStepData);
+    try {
+      if (currentStep === 0) {
+        // Step 1: Create customer with basic details
+        const basicData = {
+          name: formData.name,
+          email: formData.email,
+          mobile: formData.mobile,
+          dob: formData.dob,
+          pan: formData.panNumber,
+        };
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+        const response = await createCustomer(basicData);
+        setCustomerId(response.customer._id); // Adjust based on your API response structure
+      } else if (currentStep === 1) {
+        // Step 2: Update with personal details
+        const personalData = {
+          gender: formData.gender,
+          marital_status: formData.maritalStatus,
+          father_name: formData.fatherName,
+          mother_name: formData.motherName,
+          spouse_name: formData.spouseName,
+          occupation_type: formData.occupationType,
+          aadhaar_number: formData.aadhaarLast4,
+          residential_status: formData.residentialStatus,
+          citizenship_countries: formData.citizenshipCountry
+            ? [formData.citizenshipCountry]
+            : [],
+          place_of_birth: formData.placeOfBirth,
+          income_slab: formData.incomeSlab,
+          pep_details: formData.pepDetails,
+          tax_residency_other_than_india: formData.taxResidencyOtherThanIndia,
+          nationality_country: formData.nationalityCountry,
+        };
 
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+        await updateCustomer(customerId, personalData);
+      } else if (currentStep === 2) {
+        // Step 3: Update with bank details
+        const bankData = {
+          bank_details: {
+            account_holder_name: formData.accountHolderName,
+            account_number: formData.accountNumber,
+            ifsc_code: formData.ifscCode,
+            account_type: formData.accountType,
+          },
+        };
+
+        await updateCustomer(customerId, bankData);
+      } else if (currentStep === 3) {
+        // Step 4: Update with address
+        const addressData = {
+          address: {
+            line1: formData.addressLine1,
+            line2: formData.addressLine2,
+            line3: formData.addressLine3,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pin,
+            country: formData.country,
+            nature: formData.nature,
+          },
+        };
+
+        await updateCustomer(customerId, addressData);
+      } else if (currentStep === 4) {
+        // Step 5: Update with nominee details (if provided)
+        if (formData.nomineeName) {
+          const nomineeData = {
+            nominee: {
+              name: formData.nomineeName,
+              relationship: formData.nomineeRelationship,
+              dob: formData.nomineeDob,
+              pan: formData.nomineePan,
+              guardian_name: formData.guardianName,
+              guardian_pan: formData.guardianPan,
+              phone: formData.nomineePhone,
+              email: formData.nomineeEmail,
+              address: formData.nomineeAddress,
+              document_type: formData.nomineeDocumentType,
+              document_number: formData.nomineeDocumentNumber,
+            },
+          };
+
+          await updateCustomer(customerId, nomineeData);
+        }
+      }
+
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        // Final step completed
+        alert("Customer onboarding completed successfully!");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "An error occurred while saving data"
+      );
+      console.error("API Error:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,7 +265,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.name}
           onChange={(e) => handleInputChange("name", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           maxLength={30}
           required
         />
@@ -184,7 +278,7 @@ const CustomerOnboardingStepper = () => {
           type="tel"
           value={formData.mobile}
           onChange={(e) => handleInputChange("mobile", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           maxLength={10}
           required
         />
@@ -197,7 +291,7 @@ const CustomerOnboardingStepper = () => {
           type="email"
           value={formData.email}
           onChange={(e) => handleInputChange("email", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           maxLength={30}
           required
         />
@@ -210,7 +304,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.panNumber}
           onChange={(e) => handleInputChange("panNumber", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           required
         />
       </div>
@@ -222,7 +316,7 @@ const CustomerOnboardingStepper = () => {
           type="date"
           value={formData.dob}
           onChange={(e) => handleInputChange("dob", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           required
         />
       </div>
@@ -239,7 +333,7 @@ const CustomerOnboardingStepper = () => {
           <select
             value={formData.gender}
             onChange={(e) => handleInputChange("gender", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="">Select Gender</option>
             <option value="Male">Male</option>
@@ -253,7 +347,7 @@ const CustomerOnboardingStepper = () => {
           <select
             value={formData.maritalStatus}
             onChange={(e) => handleInputChange("maritalStatus", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="">Select Status</option>
             <option value="Married">Married</option>
@@ -269,7 +363,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.fatherName}
           onChange={(e) => handleInputChange("fatherName", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -280,7 +374,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.motherName}
           onChange={(e) => handleInputChange("motherName", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -291,7 +385,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.spouseName}
           onChange={(e) => handleInputChange("spouseName", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -302,7 +396,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.aadhaarLast4}
           onChange={(e) => handleInputChange("aadhaarLast4", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           maxLength={4}
         />
       </div>
@@ -314,7 +408,7 @@ const CustomerOnboardingStepper = () => {
           onChange={(e) =>
             handleInputChange("taxResidencyOtherThanIndia", e.target.checked)
           }
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-black"
         />
         <label
           htmlFor="taxResidency"
@@ -338,7 +432,7 @@ const CustomerOnboardingStepper = () => {
           onChange={(e) =>
             handleInputChange("accountHolderName", e.target.value)
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -349,7 +443,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.accountNumber}
           onChange={(e) => handleInputChange("accountNumber", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -360,7 +454,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.ifscCode}
           onChange={(e) => handleInputChange("ifscCode", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -370,7 +464,7 @@ const CustomerOnboardingStepper = () => {
         <select
           value={formData.accountType}
           onChange={(e) => handleInputChange("accountType", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="">Select Account Type</option>
           <option value="Savings">Savings</option>
@@ -391,7 +485,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.addressLine1}
           onChange={(e) => handleInputChange("addressLine1", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -402,7 +496,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.addressLine2}
           onChange={(e) => handleInputChange("addressLine2", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -413,7 +507,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.addressLine3}
           onChange={(e) => handleInputChange("addressLine3", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -425,7 +519,7 @@ const CustomerOnboardingStepper = () => {
             type="text"
             value={formData.city}
             onChange={(e) => handleInputChange("city", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
         <div>
@@ -436,7 +530,7 @@ const CustomerOnboardingStepper = () => {
             type="text"
             value={formData.pin}
             onChange={(e) => handleInputChange("pin", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           />
         </div>
       </div>
@@ -456,7 +550,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.nomineeName}
           onChange={(e) => handleInputChange("nomineeName", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -468,7 +562,7 @@ const CustomerOnboardingStepper = () => {
           onChange={(e) =>
             handleInputChange("nomineeRelationship", e.target.value)
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="">Select Relationship</option>
           <option value="Father">Father</option>
@@ -486,7 +580,7 @@ const CustomerOnboardingStepper = () => {
           type="date"
           value={formData.nomineeDob}
           onChange={(e) => handleInputChange("nomineeDob", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -497,7 +591,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.nomineePan}
           onChange={(e) => handleInputChange("nomineePan", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -508,7 +602,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.guardianName}
           onChange={(e) => handleInputChange("guardianName", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -519,7 +613,7 @@ const CustomerOnboardingStepper = () => {
           type="text"
           value={formData.guardianPan}
           onChange={(e) => handleInputChange("guardianPan", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -530,7 +624,7 @@ const CustomerOnboardingStepper = () => {
           type="tel"
           value={formData.nomineePhone}
           onChange={(e) => handleInputChange("nomineePhone", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
       <div>
@@ -541,7 +635,7 @@ const CustomerOnboardingStepper = () => {
           type="email"
           value={formData.nomineeEmail}
           onChange={(e) => handleInputChange("nomineeEmail", e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
     </div>
@@ -565,7 +659,7 @@ const CustomerOnboardingStepper = () => {
   };
 
   return (
-    <div className="p-4 bg-white w-full">
+    <div className="w-full mx-auto p-6 bg-white">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Customer Onboarding
@@ -615,7 +709,7 @@ const CustomerOnboardingStepper = () => {
                 </div>
                 {index < steps.length - 1 && (
                   <div
-                    className={`w-16 h-0.5 mx-4 ${
+                    className={`w-45 h-0.5 mx-4 ${
                       isCompleted ? "bg-green-500" : "bg-gray-300"
                     }`}
                   />
@@ -625,6 +719,13 @@ const CustomerOnboardingStepper = () => {
           })}
         </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
 
       {/* Form Content */}
       <div className="bg-gray-50 rounded-lg p-6 mb-6">
@@ -653,10 +754,20 @@ const CustomerOnboardingStepper = () => {
           {currentStep === steps.length - 1 ? (
             <button
               onClick={handleNext}
-              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              disabled={isLoading}
+              className="flex items-center px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Complete
-              <Check className="w-4 h-4 ml-1" />
+              {isLoading ? (
+                <>
+                  <Loader className="w-4 h-4 mr-1 animate-spin" />
+                  Completing...
+                </>
+              ) : (
+                <>
+                  Complete
+                  <Check className="w-4 h-4 ml-1" />
+                </>
+              )}
             </button>
           ) : (
             <>
@@ -668,10 +779,20 @@ const CustomerOnboardingStepper = () => {
               </button>
               <button
                 onClick={handleNext}
-                className="flex items-center px-6 py-2 bg-black text-white rounded-md"
+                disabled={isLoading}
+                className="flex items-center px-6 py-2 bg-black text-white rounded-md  disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
+                {isLoading ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-1 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
               </button>
             </>
           )}
