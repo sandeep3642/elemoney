@@ -10,8 +10,11 @@ import {
   Loader,
 } from "lucide-react";
 import { createCustomer, updateCustomer } from "./customer-service"; // Adjust path as needed
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const CustomerOnboardingStepper = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [customerId, setCustomerId] = useState(null);
@@ -140,7 +143,7 @@ const CustomerOnboardingStepper = () => {
   const handleNext = async () => {
     setIsLoading(true);
     setError(null);
-
+    // 68787bbfb0a32585183693dd
     try {
       if (currentStep === 0) {
         // Step 1: Create customer with basic details
@@ -153,7 +156,17 @@ const CustomerOnboardingStepper = () => {
         };
 
         const response = await createCustomer(basicData);
-        setCustomerId(response.customer._id); // Adjust based on your API response structure
+
+        console.log("response", response);
+
+        // Handle API response structure
+        if (response.status.success) {
+          setCustomerId(response.data._id); // Use response.data._id based on your API response
+        } else {
+          throw new Error(
+            response.status.message || "Failed to create customer"
+          );
+        }
       } else if (currentStep === 1) {
         // Step 2: Update with personal details
         const personalData = {
@@ -175,7 +188,14 @@ const CustomerOnboardingStepper = () => {
           nationality_country: formData.nationalityCountry,
         };
 
-        await updateCustomer(customerId, personalData);
+        const response = await updateCustomer(customerId, personalData);
+
+        // Handle update response
+        if (!response.status.success) {
+          throw new Error(
+            response.status.message || "Failed to update personal details"
+          );
+        }
       } else if (currentStep === 2) {
         // Step 3: Update with bank details
         const bankData = {
@@ -187,7 +207,14 @@ const CustomerOnboardingStepper = () => {
           },
         };
 
-        await updateCustomer(customerId, bankData);
+        const response = await updateCustomer(customerId, bankData);
+
+        // Handle update response
+        if (!response.status.success) {
+          throw new Error(
+            response.status.message || "Failed to update bank details"
+          );
+        }
       } else if (currentStep === 3) {
         // Step 4: Update with address
         const addressData = {
@@ -203,7 +230,14 @@ const CustomerOnboardingStepper = () => {
           },
         };
 
-        await updateCustomer(customerId, addressData);
+        const response = await updateCustomer(customerId, addressData);
+
+        // Handle update response
+        if (!response.status.success) {
+          throw new Error(
+            response.status.message || "Failed to update address"
+          );
+        }
       } else if (currentStep === 4) {
         // Step 5: Update with nominee details (if provided)
         if (formData.nomineeName) {
@@ -223,7 +257,14 @@ const CustomerOnboardingStepper = () => {
             },
           };
 
-          await updateCustomer(customerId, nomineeData);
+          const response = await updateCustomer(customerId, nomineeData);
+
+          // Handle update response
+          if (!response.status.success) {
+            throw new Error(
+              response.status.message || "Failed to update nominee details"
+            );
+          }
         }
       }
 
@@ -231,12 +272,25 @@ const CustomerOnboardingStepper = () => {
         setCurrentStep(currentStep + 1);
       } else {
         // Final step completed
-        alert("Customer onboarding completed successfully!");
+        toast.success("Customer onboarding completed successfully!");
+        navigate("/customers");
       }
     } catch (err) {
-      setError(
-        err.response?.data?.message || "An error occurred while saving data"
-      );
+      // Handle different types of errors
+      let errorMessage = "An error occurred while saving data";
+
+      if (err.response?.data?.status?.message) {
+        // API error with structured response
+        errorMessage = err.response.data.status.message;
+      } else if (err.response?.data?.message) {
+        // API error with simple message
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        // Custom error or network error
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       console.error("API Error:", err);
     } finally {
       setIsLoading(false);
@@ -336,8 +390,9 @@ const CustomerOnboardingStepper = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="transgender">Transgender</option>
           </select>
         </div>
         <div>
@@ -350,11 +405,14 @@ const CustomerOnboardingStepper = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="">Select Status</option>
-            <option value="Married">Married</option>
-            <option value="Unmarried">Unmarried</option>
+            <option value="single">Single</option>
+            <option value="married">Married</option>
+            <option value="divorced">Divorced</option>
+            <option value="widowed">Widowed</option>
           </select>
         </div>
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Father Name
@@ -366,6 +424,7 @@ const CustomerOnboardingStepper = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Mother Name
@@ -377,6 +436,7 @@ const CustomerOnboardingStepper = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Spouse Name
@@ -388,6 +448,27 @@ const CustomerOnboardingStepper = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Occupation Type
+        </label>
+        <select
+          value={formData.occupationType}
+          onChange={(e) => handleInputChange("occupationType", e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select Occupation Type</option>
+          <option value="salaried">Salaried</option>
+          <option value="business">Business</option>
+          <option value="professional">Professional</option>
+          <option value="retired">Retired</option>
+          <option value="housewife">Housewife</option>
+          <option value="student">Student</option>
+          <option value="others">Others</option>
+        </select>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Last 4 Digits of Aadhaar
@@ -398,8 +479,110 @@ const CustomerOnboardingStepper = () => {
           onChange={(e) => handleInputChange("aadhaarLast4", e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
           maxLength={4}
+          pattern="[0-9]{4}"
+          placeholder="1234"
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Residential Status
+        </label>
+        <select
+          value={formData.residentialStatus}
+          onChange={(e) =>
+            handleInputChange("residentialStatus", e.target.value)
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select Residential Status</option>
+          <option value="resident_individual">Resident Individual</option>
+          <option value="non_resident_individual">
+            Non Resident Individual
+          </option>
+          <option value="foreign_national">Foreign National</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Citizenship Country
+        </label>
+        <select
+          value={formData.citizenshipCountry}
+          onChange={(e) =>
+            handleInputChange("citizenshipCountry", e.target.value)
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select Country</option>
+          <option value="India">India</option>
+          <option value="USA">USA</option>
+          <option value="UK">UK</option>
+          <option value="Canada">Canada</option>
+          <option value="Australia">Australia</option>
+          <option value="Singapore">Singapore</option>
+          <option value="UAE">UAE</option>
+          <option value="others">Others</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Place of Birth
+        </label>
+        <input
+          type="text"
+          value={formData.placeOfBirth}
+          onChange={(e) => handleInputChange("placeOfBirth", e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+          placeholder="Enter place of birth"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Income Slab
+        </label>
+        <select
+          value={formData.incomeSlab}
+          onChange={(e) => handleInputChange("incomeSlab", e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select Income Slab</option>
+          <option value="upto_1lakh">Up to 1 Lakh</option>
+          <option value="above_1lakh_upto_5lakh">
+            Above 1 Lakh up to 5 Lakh
+          </option>
+          <option value="above_5lakh_upto_10lakh">
+            Above 5 Lakh up to 10 Lakh
+          </option>
+          <option value="above_10lakh_upto_25lakh">
+            Above 10 Lakh up to 25 Lakh
+          </option>
+          <option value="above_25lakh_upto_1cr">
+            Above 25 Lakh up to 1 Crore
+          </option>
+          <option value="above_1cr">Above 1 Crore</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          PEP Details
+        </label>
+        <select
+          value={formData.pepDetails}
+          onChange={(e) => handleInputChange("pepDetails", e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select PEP Status</option>
+          <option value="pep_exposed">PEP Exposed</option>
+          <option value="pep_related">PEP Related</option>
+          <option value="not_applicable">Not Applicable</option>
+        </select>
+      </div>
+
       <div className="flex items-center space-x-2">
         <input
           type="checkbox"
@@ -416,6 +599,29 @@ const CustomerOnboardingStepper = () => {
         >
           Tax Residency Other Than India
         </label>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Nationality Country
+        </label>
+        <select
+          value={formData.nationalityCountry}
+          onChange={(e) =>
+            handleInputChange("nationalityCountry", e.target.value)
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+        >
+          <option value="">Select Nationality</option>
+          <option value="Indian">Indian</option>
+          <option value="American">American</option>
+          <option value="British">British</option>
+          <option value="Canadian">Canadian</option>
+          <option value="Australian">Australian</option>
+          <option value="Singaporean">Singaporean</option>
+          <option value="Emirati">Emirati</option>
+          <option value="others">Others</option>
+        </select>
       </div>
     </div>
   );
@@ -467,9 +673,10 @@ const CustomerOnboardingStepper = () => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
         >
           <option value="">Select Account Type</option>
-          <option value="Savings">Savings</option>
-          <option value="Current">Current</option>
-          <option value="Salary">Salary</option>
+          <option value="savings">Savings</option>
+          <option value="current">Current</option>
+          <option value="nre">NRE</option>
+          <option value="nro">NRO</option>
         </select>
       </div>
     </div>
