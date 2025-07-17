@@ -9,6 +9,7 @@ import { getAllCustomer, getCutomerDetailsById } from "./customer-service";
 import { toast } from "react-toastify";
 import { getMessageName } from "../../utils/messageConstant";
 import { useNavigate } from "react-router-dom";
+import GlobalPagination from "../../components/GlobalPagination";
 
 const Customers = () => {
   const navigate = useNavigate();
@@ -16,7 +17,9 @@ const Customers = () => {
   const [step, setStep] = useState(1); // to open Sub admin info
   const [customersList, setCustomers] = useState([]);
   const [customerDetails, setCutomerDetails] = useState(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const filteredData =
     customersList &&
@@ -33,12 +36,18 @@ const Customers = () => {
     { id: "KYCDetails", label: "KYC Details", content: <Kycdetails /> },
   ];
 
-  async function fetchCustomers() {
+  async function fetchCustomers(page = 1, limit = 10) {
     try {
-      const response = await getAllCustomer();
+      const payload = {
+        page,
+        limit
+      }
+      const response = await getAllCustomer(payload);
       const { details, status } = response;
       if (status.success && Array.isArray(details.customers)) {
         setCustomers(details?.customers);
+        setTotalItems(details.pagination?.total || 0);
+
       }
     } catch (error) {
       toast.error("Failed to fetch service requests");
@@ -60,8 +69,8 @@ const Customers = () => {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    fetchCustomers(currentPage, rowsPerPage);
+  }, [currentPage, rowsPerPage]);
 
   return (
     <>
@@ -95,6 +104,7 @@ const Customers = () => {
                   <th className="p-3 font-semibold ">Name</th>
                   <th className="p-3 font-semibold ">Email</th>
                   <th className="p-3 font-semibold ">Mobile No.</th>
+                  <th className="p-3 font-semibold ">Pan No.</th>
                   <th className="p-3 font-semibold ">KYC Status</th>
                   <th className="p-3 font-semibold ">Joined on</th>
                   {/* <th className="p-3 font-semibold">Actions</th> */}
@@ -113,9 +123,12 @@ const Customers = () => {
                     <td className="p-3 cursor-pointer">{item.email || "NA"}</td>
                     <td className="p-3">{item.mobile || "NA"}</td>
                     <td className="p-3">
+                      {(item?.pan) || "NA"}
+                    </td>
+                    <td className="p-3">
                       {getMessageName(item?.kyc_status) || "NA"}
                     </td>
-                    <td className="p-3">{item?.joinedOn || "NA"}</td>
+                    <td className="p-3">{item?.created_at || "NA"}</td>
                     {/* <ActionsDropdown /> */}
                   </tr>
                 ))}
@@ -274,16 +287,14 @@ const Customers = () => {
                         {tabs.map((tab) => (
                           <div
                             key={tab.id}
-                            className={`p-2 rounded-lg cursor-pointer ${
-                              activeTab === tab.id ? "shadow bg-white" : ""
-                            }`}
+                            className={`p-2 rounded-lg cursor-pointer ${activeTab === tab.id ? "shadow bg-white" : ""
+                              }`}
                             onClick={() => setActiveTab(tab.id)}
                           >
                             <span
                               key={tab.id}
-                              className={`font-normal text-lg ${
-                                activeTab === tab.id ? "" : "text-gray-500"
-                              }`}
+                              className={`font-normal text-lg ${activeTab === tab.id ? "" : "text-gray-500"
+                                }`}
                             >
                               {tab.label}
                             </span>
@@ -302,6 +313,19 @@ const Customers = () => {
           </div>
         </div>
       )}
+      {/* Pagination */}
+      <div className="px-3 md:px-0">
+        <GlobalPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(totalItems / rowsPerPage)}
+          onPageChange={(page) => setCurrentPage(page)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(value) => {
+            setRowsPerPage(value);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
     </>
   );
 };

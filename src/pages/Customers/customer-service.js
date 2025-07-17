@@ -1,7 +1,7 @@
 import api from "../../services/apiService";
 
-export const getAllCustomer = async () => {
-  const res = await api.post(`customer/customerList`, {});
+export const getAllCustomer = async (payload) => {
+  const res = await api.get('customer/List', { params: payload });
   return res.data;
 };
 
