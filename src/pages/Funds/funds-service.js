@@ -1,7 +1,7 @@
 import api from "../../services/apiService";
 
 export const getFundsList = async (payload) => {
-    const res = await api.post(`fund-scheme/fundSchemeList`, payload);
+    const res = await api.get(`fund/list`, payload);
     return res.data;
 };
 
@@ -46,7 +46,7 @@ export const deleteCategory = async (payload) => {
 };
 
 export const getAllCategories = async (payload = {}) => {
-    const res = await api.post('category/getAll', payload);
+    const res = await api.get('category/list', payload);
     return res.data;
 };
 

@@ -1,6 +1,6 @@
-// src/utils/getIcon.js
+// public path version
 export const getAMCIconPath = (name) => {
-  if (!name) return '/src/assets/AMC-Icon/default-amc.svg';
+  if (!name) return '/assets/AMC-Icon/default-amc.svg';
 
   const amcIconMap = {
     "hdfc": "hdfc-mf",
@@ -26,9 +26,10 @@ export const getAMCIconPath = (name) => {
     "nippon": "nippon"
   };
 
-  const key = name.toLowerCase();
-  const folder = amcIconMap[key];
-  if (!folder) return '/src/assets/AMC-Icon/default-amc.svg';
+  const lowerName = name.toLowerCase();
+  const match = Object.keys(amcIconMap).find(key => lowerName.includes(key));
+  if (!match) return '/assets/AMC-Icon/default-amc.svg';
 
-  return `/src/assets/AMC-Icon/${folder}.imageset/${folder}.svg`;
+  const folder = amcIconMap[match];
+  return `/assests/AMC-Icon/${folder}.imageset/${folder}.svg`;
 };

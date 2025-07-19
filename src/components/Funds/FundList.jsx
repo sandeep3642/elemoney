@@ -4,6 +4,7 @@ import { FaChevronDown } from "react-icons/fa";
 import ActionsDropdown from "./ActionDropdown";
 import { getFundsList } from "../../pages/Funds/funds-service";
 import { toast } from "react-toastify";
+import { getAMCIconPath } from '../../utils/geticon';
 
 const FundList = () => {
   const [fundsData, setFundsData] = useState([]);
@@ -18,9 +19,9 @@ const FundList = () => {
 
       const res = await getFundsList({})
       const { status, details } = res
-      if (status.success && details.fund_schemes) {
+      if (status.success && details.funds) {
         toast.success("success")
-        const filteredData = details.fund_schemes.map((fund) => ({
+        const filteredData = details.funds.map((fund) => ({
           name: fund.name,
           fund_category: fund.fund_category,
           isin: fund.isin,
@@ -119,7 +120,7 @@ const FundList = () => {
                     <tr key={index} className="hover:bg-gray-50 border-b border-[#ddd]">
                       <td className="p-3 leading-[1] max-w-60">
                         <div className="flex items-center gap-2">
-                          {/* <img src={fund.Image} alt={fund.name} className="w-6 h-6" /> */}
+                          <img src={getAMCIconPath(fund.name)} alt={fund.name} className="w-6 h-6" />
                           <span className="line-clamp-1">{fund.name}</span>
                         </div>
                       </td>
